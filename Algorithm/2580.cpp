@@ -16,6 +16,12 @@
 #include <stack>
 using namespace std;
 
+struct coord
+{
+	int x;
+	int y;
+};
+
 int sdoku[9][9];
 
 int countOfZero{ 0 };
@@ -26,7 +32,8 @@ void searchHorizontal();
 void searchVertical();
 void searchSquare();
 
-void doAssume();
+void doAssumeNow();
+void checkPossibility();
 
 void printSdoku();
 
@@ -36,11 +43,10 @@ int zeroNumSqr[3][3];
 
 int hunt;
 
-struct coord
-{
-	int x;
-	int y;
-};
+vector<coord> v;
+stack<int> s;
+
+bool odds[9];
 
 int main()
 {
@@ -72,6 +78,7 @@ int main()
 		}
 	}
 
+	//일단 확정적인 것들을 구한다
 	while (!!countOfZero)
 	{
 		hunt = 0;
@@ -82,10 +89,7 @@ int main()
 			break;
 	}
 
-	doAssume();
-
 	printSdoku();
-	
 }
 
 void printSdoku()
@@ -204,10 +208,8 @@ void searchSquare()
 	}
 }
 
-void doAssume()
+void doAssumeNow()
 {
-	vector<coord> v;
-
 	for (int i = 0; i < 9; ++i)
 	{
 		for (int j = 0; j < 9; ++j)
@@ -217,4 +219,60 @@ void doAssume()
 		}
 	}
 
+	checkPossibility(v[0]);
+
+	for (int i = 0; i < 9; ++i)
+	{
+		if (odds[i])
+		{
+			s.push(i + 1);
+		}
+	}
+
+	dfs(1);
+}
+
+void checkPossibility(coord c)
+{
+	for (int i = 0; i < 9; ++i)
+	{
+		odds[i] = true;
+	}
+
+	for (int i = 0; i < 9; ++i)
+	{
+		if (sdoku[c.x][i] != 0)
+			odds[sdoku[c.x][i] - 1] = false;
+	}
+	for (int i = 0; i < 9; ++i)
+	{
+		if (sdoku[i][c.y] != 0)
+			odds[sdoku[i][c.y] - 1] = false;
+	}
+	for (int x = -1; x < 2; ++x)
+	{
+		for (int y = -1; y < 2; ++y)
+		{
+			if (sdoku[1 + c.x/3 + x][1 + c.y/3 + y] != 0)
+				odds[sdoku[1 + c.x / 3 + x][1 + c.y / 3 + y] - 1] = false;
+		}
+	}
+}
+
+void dfs(int val)
+{
+	sdoku[v[val - 1].x][v[val - 1].y] = s.top();
+	s.pop();
+
+	checkPossibility(v[val]);
+
+	for (int i = 0; i < 9; ++i)
+	{
+		if (odds[i])
+		{
+			s.push(i + 1);
+		}
+	}
+
+	dfs(val + 1);
 }
